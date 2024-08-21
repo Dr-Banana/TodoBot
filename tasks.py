@@ -14,7 +14,7 @@ class AWSLambdaAdapter(LogicAdapter):
         self.event_id = kwargs.get('event_id', str(uuid.uuid4()))
         self.api_url = self.get_api_url()
         self.user_id = self.get_user_id()
-        self.json_content = self.get_json_content()
+        self.json_content = {}
 
     def can_process(self, statement):
         return True
@@ -45,9 +45,9 @@ class AWSLambdaAdapter(LogicAdapter):
             os.makedirs(local_folder_path)
         with open(os.path.join(local_folder_path, filename), 'w') as file:
             json.dump(content, file, indent=4)
-            print(f"Content saved locally to {filename}")
 
     def process(self, input_statement, additional_response_selection_parameters):
+        if self.action == 'update': self.json_content = self.get_json_content()
         request_data = {
             "action": self.action,
             "Input_text": input_statement.text,
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     event_id = '1e026504-b625-4738-9e5d-e472c41510e4'
     action = mode_switch(event_id)
     chatbot = ChatBot(
-        'MyAWSBot',
+        'TodoBot',
         logic_adapters=[
             {
                 'import_path': __name__ + '.AWSLambdaAdapter',
@@ -147,15 +147,18 @@ if __name__ == "__main__":
         ]
     )
 
-    # 主交互循环
     print("Chat with the bot (type 'quit' to exit):")
     while True:
         user_input = input("You: ")
+        adapter = chatbot.logic_adapters[0]
         if user_input.lower() == 'quit':
-            adapter = chatbot.logic_adapters[0]
             if isinstance(adapter, AWSLambdaAdapter):
                 adapter.save_content_locally(adapter.json_content, f"{adapter.event_id}.json")
             break
         
         response = chatbot.get_response(user_input)
         print(f"Bot: {response}")
+
+        new_action = mode_switch(event_id)
+        if new_action != adapter.action:
+            adapter.action = new_action

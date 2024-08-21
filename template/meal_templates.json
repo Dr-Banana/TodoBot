@@ -1,0 +1,10 @@
+{
+    "keys": ["brief", "time", "place", "people", "date"],
+    "templates": {
+        "brief": "Thing to do: {brief}.",
+        "time": "It's scheduled for {time}.",
+        "place": "The Meal location is set to {place}.",
+        "people": "The guests will be {people}.",
+        "date": "The date is set for {date}."
+    }
+}
